@@ -1,0 +1,221 @@
+
+import { useState, useEffect } from 'react';
+import { X, MapPin, ExternalLink, Timer, DollarSign, Pencil, Check, Save } from 'lucide-react';
+import type { ScheduleItem } from '../types';
+
+interface ScheduleDetailsModalProps {
+    item: ScheduleItem | null;
+    onClose: () => void;
+    onSave: (updatedItem: ScheduleItem) => void;
+    initialIsEditing?: boolean;
+}
+
+export function ScheduleDetailsModal({ item, onClose, onSave, initialIsEditing = false }: ScheduleDetailsModalProps) {
+    const [isEditing, setIsEditing] = useState(false);
+    const [editedItem, setEditedItem] = useState<ScheduleItem | null>(null);
+
+    useEffect(() => {
+        setEditedItem(item);
+        setIsEditing(initialIsEditing);
+    }, [item, initialIsEditing]);
+
+    if (!item || !editedItem) return null;
+
+    const handleSave = () => {
+        if (editedItem) {
+            onSave(editedItem);
+            setIsEditing(false);
+        }
+    };
+
+    const handleChange = (field: keyof ScheduleItem, value: any) => {
+        setEditedItem(prev => prev ? { ...prev, [field]: value } : null);
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
+            <div
+                className="bg-white rounded-2xl w-full max-w-md shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden"
+                onClick={e => e.stopPropagation()}
+            >
+                <div className="relative">
+                    {/* Image Header */}
+                    {item.image ? (
+                        <img
+                            src={item.image}
+                            alt={item.title}
+                            className="w-full h-48 object-cover"
+                        />
+                    ) : (
+                        <div className="w-full h-24 bg-gradient-to-r from-primary-50 to-primary-100" />
+                    )}
+
+                    <div className="absolute top-4 right-4 flex gap-2">
+                        {!isEditing && (
+                            <button
+                                onClick={() => setIsEditing(true)}
+                                className="p-2 bg-white/80 backdrop-blur-md rounded-full hover:bg-white transition-colors text-gray-700"
+                            >
+                                <Pencil className="w-4 h-4" />
+                            </button>
+                        )}
+                        <button
+                            onClick={onClose}
+                            className="p-2 bg-white/80 backdrop-blur-md rounded-full hover:bg-white transition-colors"
+                        >
+                            <X className="w-5 h-5 text-gray-700" />
+                        </button>
+                    </div>
+                </div>
+
+                <div className="p-6 space-y-4">
+                    {/* Header Section (Time & Title) */}
+                    <div>
+                        <div className="flex items-center gap-2 text-primary-600 mb-2 font-medium">
+                            <Timer className="w-4 h-4" />
+                            {isEditing ? (
+                                <input
+                                    type="time"
+                                    value={editedItem.time}
+                                    onChange={(e) => handleChange('time', e.target.value)}
+                                    className="bg-gray-50 border border-gray-200 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                                />
+                            ) : (
+                                <span>{item.time}</span>
+                            )}
+                        </div>
+                        {isEditing ? (
+                            <input
+                                type="text"
+                                value={editedItem.title}
+                                onChange={(e) => handleChange('title', e.target.value)}
+                                className="w-full text-2xl font-bold text-gray-900 bg-gray-50 border border-gray-200 rounded px-2 py-1 focus:ring-2 focus:ring-primary-500 outline-none"
+                            />
+                        ) : (
+                            <h2 className="text-2xl font-bold text-gray-900">{item.title}</h2>
+                        )}
+                    </div>
+
+                    <div className="space-y-4">
+                        {/* Description */}
+                        {isEditing ? (
+                            <textarea
+                                value={editedItem.description || ''}
+                                onChange={(e) => handleChange('description', e.target.value)}
+                                rows={3}
+                                className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                                placeholder="メモや詳細を入力..."
+                            />
+                        ) : (
+                            <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">
+                                {item.description}
+                            </p>
+                        )}
+
+                        {/* Location */}
+                        {(isEditing || item.location) && (
+                            <div className="flex items-start gap-2 text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
+                                <MapPin className="w-4 h-4 mt-0.5 shrink-0" />
+                                <div className="flex-1 space-y-2">
+                                    {isEditing ? (
+                                        <>
+                                            <input
+                                                type="text"
+                                                value={editedItem.location || ''}
+                                                onChange={(e) => handleChange('location', e.target.value)}
+                                                className="w-full bg-white border border-gray-200 rounded px-2 py-1 focus:ring-2 focus:ring-primary-500 outline-none font-semibold"
+                                                placeholder="場所名"
+                                            />
+                                            <input
+                                                type="text"
+                                                value={editedItem.address || ''}
+                                                onChange={(e) => handleChange('address', e.target.value)}
+                                                className="w-full bg-white border border-gray-200 rounded px-2 py-1 focus:ring-2 focus:ring-primary-500 outline-none"
+                                                placeholder="住所"
+                                            />
+                                        </>
+                                    ) : (
+                                        <div>
+                                            <span className="font-semibold block text-gray-900">{item.location}</span>
+                                            {item.address && <span className="text-gray-500 mt-1 block">{item.address}</span>}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Budget */}
+                        {(isEditing || item.budget) && (
+                            <div className="flex items-center gap-2 text-sm">
+                                <DollarSign className="w-4 h-4 text-gray-400" />
+                                {isEditing ? (
+                                    <div className="flex items-center gap-2">
+                                        <span>¥</span>
+                                        <input
+                                            type="number"
+                                            value={editedItem.budget || ''}
+                                            onChange={(e) => handleChange('budget', Number(e.target.value))}
+                                            className="w-32 bg-gray-50 border border-gray-200 rounded px-2 py-1 focus:ring-2 focus:ring-primary-500 outline-none"
+                                            placeholder="予算"
+                                        />
+                                    </div>
+                                ) : (
+                                    <span className="text-gray-600">予算: approx. ¥{item.budget?.toLocaleString()}</span>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Link */}
+                        {(isEditing || item.link) && (
+                            <div className="w-full">
+                                {isEditing ? (
+                                    <div className="flex items-center gap-2 border border-gray-200 rounded-lg p-2 bg-gray-50">
+                                        <ExternalLink className="w-4 h-4 text-gray-400" />
+                                        <input
+                                            type="text"
+                                            value={editedItem.link || ''}
+                                            onChange={(e) => handleChange('link', e.target.value)}
+                                            className="flex-1 bg-transparent outline-none text-sm"
+                                            placeholder="URLを追加"
+                                        />
+                                    </div>
+                                ) : (
+                                    item.link && (
+                                        <a
+                                            href={item.link}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center justify-center gap-2 w-full py-2.5 mt-2 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-colors text-sm"
+                                        >
+                                            <ExternalLink className="w-4 h-4" />
+                                            詳細を見る
+                                        </a>
+                                    )
+                                )}
+                            </div>
+                        )}
+
+                        {/* Action Buttons (Edit Mode) */}
+                        {isEditing && (
+                            <div className="flex gap-3 pt-4 border-t border-gray-100 mt-4">
+                                <button
+                                    onClick={() => setIsEditing(false)} // Reset to original item on cancel (effect handles updates if needed, but simple toggle is enough for now)
+                                    className="flex-1 py-2 text-gray-600 font-bold hover:bg-gray-100 rounded-lg transition-colors"
+                                >
+                                    キャンセル
+                                </button>
+                                <button
+                                    onClick={handleSave}
+                                    className="flex-1 py-2 bg-black text-white font-bold rounded-lg hover:bg-gray-800 flex items-center justify-center gap-2"
+                                >
+                                    <Save className="w-4 h-4" />
+                                    保存する
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
