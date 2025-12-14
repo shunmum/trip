@@ -1,10 +1,8 @@
-import { User as UserIcon } from 'lucide-react';
-import type { User } from '../types/index.ts';
 import { cn } from '../lib/utils';
+import type { User } from '../types/index.ts';
 
 interface UserAvatarProps {
   user: User;
-  size?: 'sm' | 'md' | 'lg';
   size?: 'sm' | 'md' | 'lg' | 'xs';
 }
 

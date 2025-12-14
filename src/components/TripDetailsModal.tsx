@@ -16,9 +16,10 @@ export function TripDetailsModal({ trip, onClose }: TripDetailsModalProps) {
                 onClick={e => e.stopPropagation()}
             >
                 <div className="relative">
-                    {trip.photos.length > 0 ? (
+                    {/* Simplified for now as Trip type doesn't have photos array yet, just thumbnail */}
+                    {trip.thumbnail ? (
                         <img
-                            src={trip.photos[0]}
+                            src={trip.thumbnail}
                             alt={trip.title}
                             className="w-full h-48 object-cover rounded-t-2xl"
                         />
@@ -42,7 +43,7 @@ export function TripDetailsModal({ trip, onClose }: TripDetailsModalProps) {
                             </span>
                             <span className="text-xs font-semibold px-2 py-1 bg-gray-100 rounded-full flex items-center gap-1 text-gray-600">
                                 <Calendar className="w-3 h-3" />
-                                {trip.date}
+                                {trip.date instanceof Date ? trip.date.toLocaleDateString() : trip.date}
                             </span>
                         </div>
                         <h2 className="text-2xl font-bold text-gray-900">{trip.title}</h2>
@@ -52,13 +53,15 @@ export function TripDetailsModal({ trip, onClose }: TripDetailsModalProps) {
                         {trip.description}
                     </p>
 
-                    {trip.photos.length > 1 && (
+                    {/* Photos section commented out until Trip type is updated or logic fixed
+                    {trip.photos && trip.photos.length > 1 && (
                         <div className="grid grid-cols-2 gap-2 mt-4">
-                            {trip.photos.slice(1).map((photo, i) => (
+                            {trip.photos.slice(1).map((photo: string, i: number) => (
                                 <img key={i} src={photo} alt={`${trip.title} ${i + 2}`} className="rounded-lg object-cover w-full h-24" />
                             ))}
                         </div>
                     )}
+                    */}
                 </div>
             </div>
         </div>

@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Icon } from 'leaflet';
 import { pastTrips } from '../data/mockData';
-import { Calendar, Map as MapIcon, Globe } from 'lucide-react';
+import { Map as MapIcon, Globe } from 'lucide-react';
 
 // Fix for default marker icon in React-Leaflet
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';

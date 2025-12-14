@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import { X, MapPin, ExternalLink, Timer, DollarSign, Pencil, Check, Save } from 'lucide-react';
+import { X, MapPin, ExternalLink, Timer, DollarSign, Pencil, Save } from 'lucide-react';
 import type { ScheduleItem } from '../types';
 
 interface ScheduleDetailsModalProps {

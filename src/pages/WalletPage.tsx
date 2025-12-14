@@ -3,7 +3,7 @@ import { mockExpenses } from '../data/mockData';
 import { ReceiptScanner } from '../components/ReceiptScanner';
 import { ExpenseModal } from '../components/ExpenseModal';
 import { UserAvatar } from '../components/UserAvatar';
-import { Wallet, Receipt, TrendingUp, ArrowRight, Banknote, Calendar, Plus } from 'lucide-react';
+import { Receipt, ArrowRight, Banknote, Calendar, Plus } from 'lucide-react';
 import { useTrip } from '../context/TripContext';
 import type { Expense } from '../types';
 
@@ -133,7 +133,7 @@ export function WalletPage() {
                                 {balances.map(b => (
                                     <div key={b.member} className="flex justify-between items-center text-sm">
                                         <div className="flex items-center gap-2">
-                                            <UserAvatar user={b.member} size="xs" />
+                                            <UserAvatar user={b.member} size="sm" />
                                             <span>{b.member}</span>
                                         </div>
                                         <span className={b.balance >= 0 ? 'text-green-600 font-bold' : 'text-red-500'}>
@@ -170,7 +170,7 @@ export function WalletPage() {
                                 <p className="font-bold text-lg text-gray-900">¥{expense.amount.toLocaleString()}</p>
                                 <div className="flex items-center justify-end gap-1 mt-1">
                                     <span className="text-[10px] text-gray-400">Paid by</span>
-                                    <UserAvatar user={expense.paidBy} size="xs" />
+                                    <UserAvatar user={expense.paidBy} size="sm" />
                                 </div>
                             </div>
                         </div>

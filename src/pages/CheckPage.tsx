@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { Package, Plus, Trash2, CheckSquare, Square } from 'lucide-react';
+import { Plus, Trash2, CheckSquare, Square } from 'lucide-react';
 import { mockPackingList } from '../data/mockData';
-import { UserAvatar } from '../components/UserAvatar';
 import { cn } from '../lib/utils';
 import { useTrip } from '../context/TripContext';
 import type { PackingItem } from '../types';

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, DollarSign, Tag, Users, ShoppingBag, Calendar, Save } from 'lucide-react';
+import { X, DollarSign, Tag, ShoppingBag, Calendar, Save } from 'lucide-react';
 import { useTrip } from '../context/TripContext';
 import type { Expense } from '../types';
 

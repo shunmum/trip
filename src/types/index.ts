@@ -66,9 +66,9 @@ export interface Expense {
   id: string;
   amount: number;
   category: string;
-  paidBy: 'UserA' | 'UserB';
-  items: string[];
-  receiptUrl?: string;
+  paidBy: string; // Changed from User to string
+  items?: string[];
+  receiptUrl?: string; // Optional URL for the receipt image
   date: Date;
-  shopName: string;
+  shopName?: string;
 }

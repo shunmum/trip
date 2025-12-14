@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Camera, Loader2, CheckCircle2, ScanLine, X, RotateCcw } from 'lucide-react';
+import { Camera, X, CheckCircle2, ScanLine } from 'lucide-react';
 
 interface ReceiptScannerProps {
     onScanComplete: (result: { amount: number; shopName: string; items: string[] }) => void;
@@ -9,7 +9,7 @@ export function ReceiptScanner({ onScanComplete }: ReceiptScannerProps) {
     const [isScanning, setIsScanning] = useState(false);
     const [scanStep, setScanStep] = useState(0); // 0: Idle, 1: Camera Active, 2: Analyzing, 3: Complete
     const videoRef = useRef<HTMLVideoElement>(null);
-    const canvasRef = useRef<HTMLCanvasElement>(null);
+    // const canvasRef = useRef<HTMLCanvasElement>(null);
 
     const startCamera = async () => {
         setIsScanning(true);
@@ -126,11 +126,14 @@ export function ReceiptScanner({ onScanComplete }: ReceiptScannerProps) {
                                 </button>
                             )}
 
+                            {/* Reset Button (only show if analyzing stuck or explicitly needed, simplified here) */}
+                            {/*
                             {scanStep >= 2 && (
-                                <div className="p-6">
-                                    {/* Placeholder for spacing to keep X aligned */}
-                                </div>
+                                <button onClick={() => setScanStep(1)} className="p-4 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/30">
+                                    <RotateCcw className="w-6 h-6" />
+                                </button>
                             )}
+                            */}
                         </div>
 
                         <p className="absolute top-24 font-mono text-sm tracking-widest text-white/80 z-20 bg-black/50 px-4 py-1 rounded">

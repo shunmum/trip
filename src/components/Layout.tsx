@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { NavLink as RouterNavLink, useLocation, Link } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { Calendar, Bookmark, CheckSquare, Image, Home, Wallet } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { tripDate } from '../data/mockData';
