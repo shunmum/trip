@@ -1,9 +1,11 @@
 import type { ReactNode } from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { Calendar, Bookmark, CheckSquare, Image, Home, Wallet } from 'lucide-react';
+import { Calendar, Bookmark, CheckSquare, Image, Home, Wallet, Settings } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { tripDate } from '../data/mockData';
+// import { tripDate } from '../data/mockData'; // Removed hardcoded import
 import { useTrip } from '../context/TripContext';
+import { useState } from 'react';
+import { TripSettingsModal } from './TripSettingsModal';
 
 interface LayoutProps {
   children: ReactNode;
@@ -11,11 +13,18 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const location = useLocation();
-  const { tripTitle, resetTrip } = useTrip();
+  const { tripTitle, resetTrip, tripDate } = useTrip(); // Added tripDate
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const calculateDaysUntilTrip = () => {
+    if (!tripDate) return null;
     const today = new Date();
-    const diffTime = tripDate.getTime() - today.getTime();
+    // Reset hours to midnight for accurate day calculation
+    const trip = new Date(tripDate);
+    trip.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+
+    const diffTime = trip.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays;
   };
@@ -33,19 +42,43 @@ export function Layout({ children }: LayoutProps) {
 
   return (
     <div className="flex h-screen bg-gray-50 flex-col md:flex-row">
+      {/* Settings Modal */}
+      {isSettingsOpen && <TripSettingsModal onClose={() => setIsSettingsOpen(false)} />}
+
       {/* Sidebar for Desktop */}
       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200">
-        <div className="p-6">
-          <h1 className="text-2xl font-bold text-gray-800 tracking-tight">{tripTitle || 'Futari-Tabi'}</h1>
+        <div className="p-6 flex justify-between items-start">
+          <h1 className="text-2xl font-bold text-gray-800 tracking-tight leading-tight flex-1 mr-2 break-words">
+            {tripTitle || 'Tabinico'}
+          </h1>
+          <button
+            onClick={() => setIsSettingsOpen(true)}
+            className="text-gray-400 hover:text-black transition-colors p-1"
+            aria-label="Edit Trip Settings"
+          >
+            <Settings className="w-5 h-5" />
+          </button>
         </div>
 
         {/* Prominent Countdown for Desktop */}
         <div className="mx-4 mb-6 p-4 bg-primary-50 rounded-xl border border-primary-100 text-center">
-          <p className="text-sm text-gray-600 mb-1">旅行まであと</p>
-          <div className="text-4xl font-bold text-primary-600 leading-none">
-            {daysUntilTrip}
-            <span className="text-sm font-normal text-gray-400 ml-1">日</span>
-          </div>
+          {daysUntilTrip !== null ? (
+            <>
+              <p className="text-sm text-gray-600 mb-1">旅行まであと</p>
+              <div className="text-4xl font-bold text-primary-600 leading-none">
+                {daysUntilTrip > 0 ? daysUntilTrip : 0}
+                <span className="text-sm font-normal text-gray-400 ml-1">日</span>
+              </div>
+              {daysUntilTrip <= 0 && <p className="text-xs text-primary-600 font-bold mt-1">Day {Math.abs(daysUntilTrip) + 1}</p>}
+            </>
+          ) : (
+            <div className="py-2">
+              <p className="text-sm text-gray-400">日程未定</p>
+              <button onClick={() => setIsSettingsOpen(true)} className="text-xs text-primary-600 font-bold hover:underline mt-1">
+                日程を設定
+              </button>
+            </div>
+          )}
         </div>
 
         <nav className="flex-1 px-4 space-y-2">
@@ -88,11 +121,20 @@ export function Layout({ children }: LayoutProps) {
       <div className="flex-1 flex flex-col h-full overflow-hidden">
         {/* Mobile Header (Hidden on Desktop) */}
         <header className={cn("md:hidden bg-white shadow-sm border-b border-gray-200 px-4 py-4 shrink-0", location.pathname === '/' && "hidden")}>
-          <div className="max-w-md mx-auto">
-            <h1 className="text-xl font-bold text-gray-800">{tripTitle || 'Futari-Tabi'}</h1>
-            <p className="text-sm text-gray-600 mt-1">
-              旅行まであと <span className="font-semibold text-primary-600">{daysUntilTrip}</span> 日
-            </p>
+          <div className="max-w-md mx-auto flex justify-between items-center">
+            <div>
+              <h1 className="text-xl font-bold text-gray-800">{tripTitle || 'Tabinico'}</h1>
+              {daysUntilTrip !== null ? (
+                <p className="text-sm text-gray-600 mt-1">
+                  旅行まであと <span className="font-semibold text-primary-600">{daysUntilTrip > 0 ? daysUntilTrip : 0}</span> 日
+                </p>
+              ) : (
+                <p className="text-xs text-gray-400 mt-1">日程未定</p>
+              )}
+            </div>
+            <button onClick={() => setIsSettingsOpen(true)} className="p-2 text-gray-400 hover:text-gray-800">
+              <Settings className="w-5 h-5" />
+            </button>
           </div>
         </header>
 

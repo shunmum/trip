@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, MapPin, ExternalLink, Timer, DollarSign, Pencil, Save } from 'lucide-react';
+import { X, MapPin, ExternalLink, Timer, JapaneseYen, Pencil, Save } from 'lucide-react';
 import type { ScheduleItem } from '../types';
 
 interface ScheduleDetailsModalProps {
@@ -146,7 +146,7 @@ export function ScheduleDetailsModal({ item, onClose, onSave, initialIsEditing =
                         {/* Budget */}
                         {(isEditing || item.budget) && (
                             <div className="flex items-center gap-2 text-sm">
-                                <DollarSign className="w-4 h-4 text-gray-400" />
+                                <JapaneseYen className="w-4 h-4 text-gray-400" />
                                 {isEditing ? (
                                     <div className="flex items-center gap-2">
                                         <span>¥</span>

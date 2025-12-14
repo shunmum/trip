@@ -8,6 +8,7 @@ export function OnboardingPage() {
     const [step, setStep] = useState(1); // 1: Count, 2: Names, 3: Title
     const [memberCount, setMemberCount] = useState(2);
     const [memberNames, setMemberNames] = useState<string[]>(['', '']);
+    const [tripDate, setTripDate] = useState<string>(''); // Store as YYYY-MM-DD string locally
     const [title, setTitle] = useState('');
 
     const handleNext = () => {
@@ -22,8 +23,12 @@ export function OnboardingPage() {
             if (memberNames.some(n => !n.trim())) return;
             setStep(3);
         } else if (step === 3) {
+            // New Step: Date
+            setStep(4);
+        } else if (step === 4) {
             if (!title.trim()) return;
-            setTripInfo(title, memberNames);
+            // setTripInfo handles Date | null. If empty string, pass null, else new Date
+            setTripInfo(title, memberNames, tripDate ? new Date(tripDate) : null);
         }
     };
 
@@ -41,7 +46,7 @@ export function OnboardingPage() {
 
             {/* Progress Dots */}
             <div className="flex gap-2 mb-12">
-                {[1, 2, 3].map(i => (
+                {[1, 2, 3, 4].map(i => (
                     <div key={i} className={cn("w-2 h-2 rounded-full transition-colors", i === step ? "bg-black" : "bg-gray-200")} />
                 ))}
             </div>
@@ -100,8 +105,28 @@ export function OnboardingPage() {
                     </div>
                 )}
 
-                {/* Step 3: Trip Title */}
+                {/* Step 3: Trip Date */}
                 {step === 3 && (
+                    <div className="space-y-6 animate-in slide-in-from-right duration-300">
+                        {/* Use Calendar icon for Date step */}
+                        <div className="w-16 h-16 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                            {/* Assuming Calendar icon is available or we can use Palmtree temporarily if needed, but imported Lucide icons don't include Calendar yet. Wait, I should import Calendar. */}
+                            <span className="text-3xl">📅</span>
+                        </div>
+                        <h1 className="text-2xl font-bold text-gray-900">いつ旅行に行きますか？</h1>
+                        <p className="text-gray-500">決まっていない場合はスキップできます</p>
+
+                        <input
+                            type="date"
+                            className="w-full text-center text-xl font-bold border-b-2 border-gray-200 py-2 focus:border-black focus:outline-none"
+                            value={tripDate}
+                            onChange={(e) => setTripDate(e.target.value)}
+                        />
+                    </div>
+                )}
+
+                {/* Step 4: Trip Title */}
+                {step === 4 && (
                     <div className="space-y-6 animate-in slide-in-from-right duration-300">
                         <div className="w-16 h-16 bg-orange-50 text-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
                             <Palmtree className="w-8 h-8" />
@@ -137,17 +162,17 @@ export function OnboardingPage() {
                         onClick={handleNext}
                         disabled={
                             (step === 2 && memberNames.some(n => !n.trim())) ||
-                            (step === 3 && !title.trim())
+                            (step === 4 && !title.trim())
                         }
                         className="w-full bg-black text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-gray-800 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        {step === 3 ? (
+                        {step === 4 ? (
                             <>
                                 はじめる <Check className="w-5 h-5" />
                             </>
                         ) : (
                             <>
-                                次へ <ArrowRight className="w-5 h-5" />
+                                {step === 3 && !tripDate ? 'スキップして次へ' : '次へ'} <ArrowRight className="w-5 h-5" />
                             </>
                         )}
                     </button>

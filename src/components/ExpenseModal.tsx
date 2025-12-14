@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, DollarSign, Tag, ShoppingBag, Calendar, Save } from 'lucide-react';
+import { X, JapaneseYen, Tag, ShoppingBag, Calendar, Save } from 'lucide-react';
 import { useTrip } from '../context/TripContext';
 import type { Expense } from '../types';
 
@@ -64,7 +64,7 @@ export function ExpenseModal({ isOpen, onClose, onSave }: ExpenseModalProps) {
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">金額</label>
                         <div className="relative">
-                            <DollarSign className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                            <JapaneseYen className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
                             <input
                                 type="number"
                                 value={amount}

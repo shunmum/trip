@@ -1,17 +1,13 @@
 import { useState } from 'react';
 import { Plus, Trash2, CheckSquare, Square } from 'lucide-react';
-import { mockPackingList } from '../data/mockData';
 import { cn } from '../lib/utils';
 import { useTrip } from '../context/TripContext';
 import type { PackingItem } from '../types';
 
-type TabType = string; // Now just string, including 'common', 'extra', and member names
+type TabType = string;
 
 export function CheckPage() {
-  const { members } = useTrip();
-  // Normalize mock data to match new type if needed, or assume it's compatible enough for initial load
-  // We might need to cast or map if mockData is strictly typed to old User
-  const [items, setItems] = useState<PackingItem[]>(mockPackingList as PackingItem[]);
+  const { members, checkList, setCheckList, checkListTabs, setCheckListTabs } = useTrip();
   const [activeTab, setActiveTab] = useState<TabType>('common');
   const [newItemText, setNewItemText] = useState('');
 
@@ -19,22 +15,23 @@ export function CheckPage() {
     { id: 'common', label: '共有' },
     ...members.map(m => ({ id: m, label: m })),
     { id: 'extra', label: '追加' },
+    ...checkListTabs.map(t => ({ id: t, label: t })),
   ];
 
-  const filteredItems = items.filter(item => {
-    if (activeTab === 'common') return item.assignedTo === 'common';
-    if (activeTab === 'extra') return item.assignedTo === 'extra';
+  const filteredItems = checkList.filter(item => {
+    // If items were from 'mockPackingList', they might have assignments not in our tabs logic.
+    // We match exactly assignments.
     return item.assignedTo === activeTab;
   });
 
   const handleToggle = (id: string) => {
-    setItems(items.map(item =>
+    setCheckList(checkList.map(item =>
       item.id === id ? { ...item, checked: !item.checked } : item
     ));
   };
 
   const handleDelete = (id: string) => {
-    setItems(items.filter(item => item.id !== id));
+    setCheckList(checkList.filter(item => item.id !== id));
   };
 
   const handleAddItem = (e: React.FormEvent) => {
@@ -48,8 +45,21 @@ export function CheckPage() {
       checked: false,
     };
 
-    setItems([...items, newItem]);
+    setCheckList([...checkList, newItem]);
     setNewItemText('');
+  };
+
+  const handleAddTab = () => {
+    const tabName = window.prompt("新しいリストの名前を入力してください");
+    if (tabName && tabName.trim()) {
+      // Avoid duplicates
+      if (tabs.some(t => t.label === tabName)) {
+        alert("すでに同じ名前のリストがあります");
+        return;
+      }
+      setCheckListTabs([...checkListTabs, tabName.trim()]);
+      setActiveTab(tabName.trim());
+    }
   };
 
   return (
@@ -64,13 +74,13 @@ export function CheckPage() {
       <section className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-[calc(100vh-180px)]">
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-100 overflow-x-auto scrollbar-hide">
+        <div className="flex border-b border-gray-100 overflow-x-auto items-center scrollbar-hide">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                "flex-1 py-4 text-sm font-bold border-b-2 transition-colors min-w-[80px]",
+                "flex-1 py-4 text-sm font-bold border-b-2 transition-colors min-w-[80px] px-3",
                 activeTab === tab.id
                   ? "border-primary-600 text-primary-600 bg-primary-50/30"
                   : "border-transparent text-gray-400 hover:text-gray-600 hover:bg-gray-50"
@@ -79,6 +89,13 @@ export function CheckPage() {
               {tab.label}
             </button>
           ))}
+          <button
+            onClick={handleAddTab}
+            className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors shrink-0"
+            title="リストを追加"
+          >
+            <Plus className="w-5 h-5" />
+          </button>
         </div>
 
         {/* List Content */}
@@ -131,7 +148,7 @@ export function CheckPage() {
               type="text"
               value={newItemText}
               onChange={(e) => setNewItemText(e.target.value)}
-              placeholder={`${tabs.find(t => t.id === activeTab)?.label}リストに追加...`}
+              placeholder={`${tabs.find(t => t.id === activeTab)?.label ?? 'この'}リストに追加...`}
               className="flex-1 px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
             />
             <button

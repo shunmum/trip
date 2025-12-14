@@ -1,45 +1,60 @@
 import { useState } from 'react';
 import { Calendar, Plus } from 'lucide-react';
-import { mockSchedule, tripDate } from '../data/mockData';
 import { UserAvatar } from '../components/UserAvatar';
 import { Timeline } from '../components/Timeline';
 import { ScheduleDetailsModal } from '../components/ScheduleDetailsModal';
 import { cn } from '../lib/utils';
 import type { ScheduleItem } from '../types';
+import { useTrip } from '../context/TripContext';
 
 export function PlanPage() {
+  const { tripTitle, members, tripDate, schedule, setSchedule, tripDuration, setTripDuration } = useTrip();
+
   const [selectedDay, setSelectedDay] = useState(1);
   const [selectedScheduleItem, setSelectedScheduleItem] = useState<ScheduleItem | null>(null);
-  const [scheduleItems, setScheduleItems] = useState(mockSchedule);
+  const [isNewItem, setIsNewItem] = useState(false);
 
-  const formattedDate = new Intl.DateTimeFormat('ja-JP', {
+  // Filter schedule by day
+  const filteredSchedule = schedule.filter(item => item.day === selectedDay).sort((a, b) => a.time.localeCompare(b.time));
+
+  // Date formatting helper
+  const formattedDate = tripDate ? new Intl.DateTimeFormat('ja-JP', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
     weekday: 'long',
-  }).format(tripDate);
+  }).format(new Date(tripDate)) : '日程未定';
 
-  const filteredSchedule = scheduleItems.filter(item => item.day === selectedDay);
-
-  // Helper to get date for a specific day (Day 1 = tripDate, Day 2 = tripDate + 1)
+  // Helper to get date for a specific day tab
   const getDateForDay = (dayOffset: number) => {
+    if (!tripDate) return `Day ${dayOffset}`;
     const date = new Date(tripDate);
     date.setDate(date.getDate() + (dayOffset - 1));
     return new Intl.DateTimeFormat('ja-JP', { month: 'numeric', day: 'numeric', weekday: 'short' }).format(date);
   };
 
-  const [isNewItem, setIsNewItem] = useState(false);
-
   const handleSaveScheduleItem = (updatedItem: ScheduleItem) => {
+    let newSchedule: ScheduleItem[];
+
     if (isNewItem) {
-      setScheduleItems(prev => [...prev, updatedItem].sort((a, b) => a.time.localeCompare(b.time)));
+      newSchedule = [...schedule, updatedItem];
     } else {
-      setScheduleItems(prevItems =>
-        prevItems.map(item => item.id === updatedItem.id ? updatedItem : item)
-      );
+      newSchedule = schedule.map(item => item.id === updatedItem.id ? updatedItem : item);
     }
+
+    setSchedule(newSchedule);
     setSelectedScheduleItem(updatedItem);
-    setIsNewItem(false); // Reset flag
+    setIsNewItem(false);
+  };
+
+  // Calculate days based on tripDuration
+  // If schedule has items on Day X > tripDuration, we should probably auto-expand or just respect duration?
+  // User requested "Add Button" next to Day 2.
+  // So we rely on tripDuration.
+  const days = Array.from({ length: tripDuration }, (_, i) => i + 1);
+
+  const handleAddDay = () => {
+    setTripDuration(tripDuration + 1);
   };
 
   const handleAddNewItem = () => {
@@ -74,14 +89,15 @@ export function PlanPage() {
             <span className="bg-orange-100 text-orange-700 px-2 py-0.5 rounded text-xs">旅行計画</span>
           </div>
           <h1 className="text-4xl font-bold text-gray-900 tracking-tight mb-6">
-            冬の温泉旅行プラン ♨️
+            {tripTitle || '旅のしおり'} ♨️
           </h1>
           <div className="flex items-center gap-3">
             <div className="flex -space-x-2">
-              <UserAvatar user="UserA" size="sm" />
-              <UserAvatar user="UserB" size="sm" />
+              {members.map((member, i) => (
+                <UserAvatar key={i} user={member} size="sm" />
+              ))}
             </div>
-            <p className="text-gray-500 text-sm">2人が編集中</p>
+            <p className="text-gray-500 text-sm">{members.length}人が編集中</p>
           </div>
         </div>
 
@@ -100,13 +116,13 @@ export function PlanPage() {
           </div>
 
           {/* Day Tabs */}
-          <div className="flex gap-2 mb-6 border-b border-gray-100">
-            {[1, 2].map((day) => (
+          <div className="flex gap-2 mb-6 border-b border-gray-100 overflow-x-auto items-center">
+            {days.map((day) => (
               <button
                 key={day}
                 onClick={() => setSelectedDay(day)}
                 className={cn(
-                  "px-4 py-2 text-sm font-medium border-b-2 transition-colors",
+                  "px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap",
                   selectedDay === day
                     ? "border-primary-600 text-primary-600"
                     : "border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-200"
@@ -115,17 +131,29 @@ export function PlanPage() {
                 Day {day} <span className="text-xs font-normal text-gray-400 ml-1">({getDateForDay(day)})</span>
               </button>
             ))}
-            <button className="px-3 py-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-t-lg transition-colors">
-              <Plus className="w-4 h-4" />
+            <button
+              onClick={handleAddDay}
+              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors ml-2"
+              title="日程を追加"
+            >
+              <Plus className="w-5 h-5" />
             </button>
           </div>
 
-          <Timeline items={filteredSchedule} onItemClick={setSelectedScheduleItem} />
+          {filteredSchedule.length > 0 ? (
+            <Timeline items={filteredSchedule} onItemClick={setSelectedScheduleItem} />
+          ) : (
+            <div className="text-center py-20 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+              <p className="text-gray-400 mb-4">まだ予定がありません</p>
+              <button
+                onClick={handleAddNewItem}
+                className="text-primary-600 font-bold hover:underline"
+              >
+                予定を追加する
+              </button>
+            </div>
+          )}
         </section>
-
-
-
-
       </div>
 
       <ScheduleDetailsModal

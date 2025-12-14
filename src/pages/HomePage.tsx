@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Icon } from 'leaflet';
 import { pastTrips } from '../data/mockData';
-import { Map as MapIcon, Globe } from 'lucide-react';
+import { Map as MapIcon, Globe, Bookmark } from 'lucide-react';
+import { useTrip } from '../context/TripContext';
 
 // Fix for default marker icon in React-Leaflet
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
@@ -19,6 +21,15 @@ Icon.Default.mergeOptions({
 
 export function HomePage() {
     const [mapView, setMapView] = useState<'japan' | 'world'>('japan');
+    const { resetTrip } = useTrip();
+
+    const handlePlanNewTrip = () => {
+        if (confirm('新しい旅行を計画しますか？現在の旅行データはリセットされます。')) {
+            resetTrip();
+            // Force reload to clear any lingering state if necessary, or just rely on context update
+            window.location.reload();
+        }
+    };
 
     // Centers
     const centers = {
@@ -34,16 +45,17 @@ export function HomePage() {
 
     return (
         <div className="h-full flex flex-col bg-white">
-            {/* Map Controls */}
+            {/* Map Controls & Header */}
             <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-white z-10 relative">
                 <div>
                     <h2 className="text-3xl font-bold text-black flex items-center gap-3 tracking-tighter">
                         <MapIcon className="w-8 h-8 text-black" strokeWidth={2.5} />
-                        TRIP MAP
+                        Tabinico MAP
                     </h2>
                     <p className="text-xs text-gray-500 font-medium tracking-widest mt-1 uppercase">Your Travel History</p>
                 </div>
                 <div className="flex bg-gray-100 p-1 rounded-md">
+                    {/* View Toggles */}
                     <button
                         onClick={() => setMapView('japan')}
                         className={`px-4 py-2 text-xs font-bold rounded-sm transition-all tracking-wider ${mapView === 'japan'
@@ -63,6 +75,21 @@ export function HomePage() {
                         <Globe className="w-3 h-3" /> WORLD
                     </button>
                 </div>
+            </div>
+
+            {/* New Trip CTA Overlay */}
+            <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-[400] w-full max-w-md px-4 flex flex-col items-center gap-4">
+                <button
+                    onClick={handlePlanNewTrip}
+                    className="w-full bg-black text-white py-4 rounded-full font-bold text-lg shadow-xl hover:bg-gray-800 transition-all flex items-center justify-center gap-2 hover:scale-105 active:scale-95"
+                >
+                    <span>✨</span> 新しい旅行を計画する
+                </button>
+
+                <Link to="/scrap" className="text-sm font-bold text-gray-500 hover:text-black bg-white/80 backdrop-blur-md px-4 py-2 rounded-full shadow-sm transition-colors flex items-center gap-1">
+                    <Bookmark className="w-4 h-4" />
+                    次の旅の候補を見る
+                </Link>
             </div>
 
             {/* Map Container */}
@@ -110,7 +137,7 @@ export function HomePage() {
                                     <div className="h-32 w-full mb-3 overflow-hidden rounded-sm relative">
                                         <img src={trip.thumbnail} alt={trip.title} className="w-full h-full object-cover grayscale transition-all hover:grayscale-0" />
                                         <div className="absolute top-2 left-2 bg-black text-white text-[10px] px-2 py-0.5 font-bold uppercase tracking-widest">
-                                            {trip.date.getFullYear()}
+                                            {trip.date instanceof Date ? trip.date.getFullYear() : 'YEAR'}
                                         </div>
                                     </div>
                                     <h3 className="font-bold text-black text-lg leading-tight mb-1">{trip.title}</h3>
