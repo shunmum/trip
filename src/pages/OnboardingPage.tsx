@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useTrip } from '../context/TripContext';
+import { useAuth } from '../context/AuthContext';
 import { Users, Palmtree, ArrowRight, Check } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 export function OnboardingPage() {
     const { setTripInfo } = useTrip();
+    const { user, signInWithGoogle } = useAuth();
     const [step, setStep] = useState(1); // 1: Count, 2: Names, 3: Title
     const [memberCount, setMemberCount] = useState(2);
     const [memberNames, setMemberNames] = useState<string[]>(['', '']);
@@ -40,6 +42,39 @@ export function OnboardingPage() {
 
     // Preset titles for inspiration
     const presets = ['北海道食い倒れ旅行', '沖縄のんびり旅', '京都紅葉巡り', '韓国ショッピング旅'];
+
+    if (!user) {
+        return (
+            <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-500">
+                <div className="max-w-md w-full space-y-8">
+                    <div className="space-y-4">
+                        <div className="w-20 h-20 bg-primary-100 text-primary-600 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                            <Palmtree className="w-10 h-10" />
+                        </div>
+                        <h1 className="text-3xl font-black text-gray-900 tracking-tight">Tabinico</h1>
+                        <p className="text-gray-500">ふたり旅をもっと楽しく、もっと自由に。</p>
+                    </div>
+
+                    <div className="pt-8">
+                        <button
+                            onClick={signInWithGoogle}
+                            className="w-full bg-white border border-gray-300 text-gray-700 font-bold py-4 rounded-xl flex items-center justify-center gap-3 hover:bg-gray-50 transition-all shadow-sm"
+                        >
+                            <div className="w-5 h-5">
+                                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="w-full h-full block">
+                                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+                                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
+                                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
+                                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+                                </svg>
+                            </div>
+                            Googleでログイン
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-500">
@@ -110,7 +145,6 @@ export function OnboardingPage() {
                     <div className="space-y-6 animate-in slide-in-from-right duration-300">
                         {/* Use Calendar icon for Date step */}
                         <div className="w-16 h-16 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                            {/* Assuming Calendar icon is available or we can use Palmtree temporarily if needed, but imported Lucide icons don't include Calendar yet. Wait, I should import Calendar. */}
                             <span className="text-3xl">📅</span>
                         </div>
                         <h1 className="text-2xl font-bold text-gray-900">いつ旅行に行きますか？</h1>
@@ -176,6 +210,11 @@ export function OnboardingPage() {
                             </>
                         )}
                     </button>
+                    <div className="mt-4">
+                        <p className="text-xs text-gray-400">
+                            Logged in as {user.email}
+                        </p>
+                    </div>
                 </div>
 
             </div>

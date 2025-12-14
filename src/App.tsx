@@ -32,11 +32,15 @@ function AppContent() {
   );
 }
 
+import { AuthProvider } from './context/AuthContext';
+
 function App() {
   return (
-    <TripProvider>
-      <AppContent />
-    </TripProvider>
+    <AuthProvider>
+      <TripProvider>
+        <AppContent />
+      </TripProvider>
+    </AuthProvider>
   );
 }
 
