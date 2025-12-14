@@ -12,9 +12,6 @@ import { TripProvider, useTrip } from './context/TripContext';
 function AppContent() {
   const { isSetup } = useTrip();
 
-  // Debug: Check if deployment updated
-  console.log("App Version: 1.1 (Deployed 2025-12-14)");
-
   if (!isSetup) {
     return <OnboardingPage />;
   }
