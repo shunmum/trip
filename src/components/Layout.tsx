@@ -49,7 +49,7 @@ export function Layout({ children }: LayoutProps) {
       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200">
         <div className="p-6 flex justify-between items-start">
           <h1 className="text-2xl font-bold text-gray-800 tracking-tight leading-tight flex-1 mr-2 break-words">
-            {tripTitle || 'Tabinico'}
+            {tripTitle || 'Tabinico'} <span className="text-xs font-normal text-gray-300">v1.1</span>
           </h1>
           <button
             onClick={() => setIsSettingsOpen(true)}
