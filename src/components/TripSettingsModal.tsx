@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Calendar, Users, Type, Save } from 'lucide-react';
+import { X, Calendar, Users, Type, Save, Share } from 'lucide-react';
 import { useTrip } from '../context/TripContext';
 
 interface TripSettingsModalProps {
@@ -114,7 +114,18 @@ export function TripSettingsModal({ onClose }: TripSettingsModalProps) {
                 </div>
 
                 {/* Footer */}
-                <div className="p-4 border-t border-gray-100 bg-gray-50">
+                <div className="p-4 border-t border-gray-100 bg-gray-50 space-y-3">
+                    <button
+                        onClick={() => {
+                            navigator.clipboard.writeText(window.location.origin);
+                            alert('URLをコピーしました！パートナーに送って共有しましょう。');
+                        }}
+                        className="w-full bg-white border border-gray-300 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
+                    >
+                        <Share className="w-4 h-4" />
+                        パートナーを招待する（URLコピー）
+                    </button>
+
                     <button
                         onClick={handleSave}
                         className="w-full bg-black text-white font-bold py-3 rounded-xl hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
