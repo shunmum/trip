@@ -7,12 +7,13 @@ interface TripContextType {
     isSetup: boolean;
     tripTitle: string;
     tripDate: Date | null;
+    tripImage: string | null; // New
     members: string[]; // List of names
     schedule: ScheduleItem[];
     checkList: PackingItem[];
     checkListTabs: string[];
     tripDuration: number;
-    setTripInfo: (title: string, members: string[], date: Date | null) => void;
+    setTripInfo: (title: string, members: string[], date: Date | null, image?: string | null) => void; // Updated
     setSchedule: (items: ScheduleItem[]) => void;
     setCheckList: (items: PackingItem[]) => void;
     setCheckListTabs: (tabs: string[]) => void;
@@ -29,6 +30,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
     const [isSetup, setIsSetup] = useState(false);
     const [tripTitle, setTripTitle] = useState('');
     const [tripDate, setTripDate] = useState<Date | null>(null);
+    const [tripImage, setTripImage] = useState<string | null>(null); // New
     const [members, setMembers] = useState<string[]>([]);
     const [schedule, setScheduleState] = useState<ScheduleItem[]>([]);
     const [checkList, setCheckListState] = useState<PackingItem[]>([]);
@@ -46,6 +48,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
                 if (data.date) {
                     setTripDate(new Date(data.date));
                 }
+                setTripImage(data.image || null); // New
                 setScheduleState(data.schedule || []);
                 setTripDurationState(data.duration || 2);
                 setCheckListState(data.checkList || []);
@@ -67,6 +70,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
             title: tripTitle,
             members,
             date: tripDate?.toISOString() || null,
+            image: tripImage, // New
             schedule,
             duration: tripDuration,
             checkList,
@@ -81,12 +85,18 @@ export function TripProvider({ children }: { children: ReactNode }) {
         }
     };
 
-    const setTripInfo = (title: string, newMembers: string[], date: Date | null) => {
+    const setTripInfo = (title: string, newMembers: string[], date: Date | null, image?: string | null) => {
         setTripTitle(title);
         setMembers(newMembers);
         setTripDate(date);
+        if (image !== undefined) setTripImage(image);
         setIsSetup(true);
-        saveTripData({ title, members: newMembers, date: date?.toISOString() || null });
+        saveTripData({
+            title,
+            members: newMembers,
+            date: date?.toISOString() || null,
+            ...(image !== undefined ? { image } : {})
+        });
     };
 
     const setSchedule = (items: ScheduleItem[]) => {
@@ -115,6 +125,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
         setTripTitle('');
         setMembers([]);
         setTripDate(null);
+        setTripImage(null); // New
         setScheduleState([]);
         setCheckListState([]);
         setCheckListTabsState([]);
@@ -122,7 +133,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
         // In Firestore, we might want to delete the doc or clear fields
         try {
             await setDoc(doc(db, "trips", TRIP_ID), {
-                title: '', members: [], date: null, schedule: [], duration: 2, checkList: [], checkListTabs: []
+                title: '', members: [], date: null, image: null, schedule: [], duration: 2, checkList: [], checkListTabs: []
             });
         } catch (e) {
             console.error("Error resetting trip", e);
@@ -131,7 +142,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
 
     return (
         <TripContext.Provider value={{
-            isSetup, tripTitle, tripDate, members, schedule, checkList, checkListTabs, tripDuration,
+            isSetup, tripTitle, tripDate, tripImage, members, schedule, checkList, checkListTabs, tripDuration,
             setTripInfo, setSchedule, setCheckList, setCheckListTabs, setTripDuration, resetTrip
         }}>
             {children}

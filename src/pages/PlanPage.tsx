@@ -8,7 +8,7 @@ import type { ScheduleItem } from '../types';
 import { useTrip } from '../context/TripContext';
 
 export function PlanPage() {
-  const { tripTitle, members, tripDate, schedule, setSchedule, tripDuration, setTripDuration } = useTrip();
+  const { tripTitle, members, tripDate, schedule, setSchedule, tripDuration, setTripDuration, tripImage } = useTrip();
 
   const [selectedDay, setSelectedDay] = useState(1);
   const [selectedScheduleItem, setSelectedScheduleItem] = useState<ScheduleItem | null>(null);
@@ -73,12 +73,23 @@ export function PlanPage() {
 
   return (
     <div className="h-full bg-white overflow-y-auto">
-      {/* Cover Image Placeholder (Notion style) */}
-      <div className="h-48 w-full bg-gradient-to-b from-gray-100 to-white border-b border-gray-100 flex items-center justify-center group relative cursor-pointer hover:bg-gray-50 transition-colors">
-        <div className="text-gray-400 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <span className="text-sm">カバー画像を追加</span>
+      {/* Cover Image */}
+      {tripImage ? (
+        <div className="h-48 w-full relative group">
+          <img src={tripImage} alt="Cover" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <p className="text-white font-bold text-sm">設定から変更可能</p>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="h-48 w-full bg-gradient-to-b from-gray-100 to-white border-b border-gray-100 flex items-center justify-center group relative cursor-pointer hover:bg-gray-50 transition-colors"
+          onClick={() => alert('左上（またはヘッダー）の設定ボタン⚙️から画像を追加できます！')}
+        >
+          <div className="text-gray-400 flex items-center gap-2 opacity-100 transition-opacity">
+            <span className="text-sm">➕ カバー画像を追加（設定から）</span>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-4xl mx-auto px-6 md:px-12 py-12">
         {/* Header */}
@@ -89,7 +100,7 @@ export function PlanPage() {
             <span className="bg-orange-100 text-orange-700 px-2 py-0.5 rounded text-xs">旅行計画</span>
           </div>
           <h1 className="text-4xl font-bold text-gray-900 tracking-tight mb-6">
-            {tripTitle || '旅のしおり'} ♨️
+            {tripTitle || '旅のしおり'}
           </h1>
           <div className="flex items-center gap-3">
             <div className="flex -space-x-2">

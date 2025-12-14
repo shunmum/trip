@@ -7,22 +7,24 @@ interface TripSettingsModalProps {
 }
 
 export function TripSettingsModal({ onClose }: TripSettingsModalProps) {
-    const { tripTitle, tripDate, members, setTripInfo } = useTrip();
+    const { tripTitle, tripDate, tripImage, members, setTripInfo } = useTrip();
 
     // Local state for editing form
     const [title, setTitle] = useState(tripTitle);
     const [date, setDate] = useState<string>(''); // YYYY-MM-DD
+    const [imageUrl, setImageUrl] = useState(tripImage || '');
     const [localMembers, setLocalMembers] = useState<string[]>(members);
 
     useEffect(() => {
         setTitle(tripTitle);
         setLocalMembers(members);
+        setImageUrl(tripImage || '');
         if (tripDate) {
             setDate(tripDate.toISOString().split('T')[0]);
         } else {
             setDate('');
         }
-    }, [tripTitle, tripDate, members]);
+    }, [tripTitle, tripDate, members, tripImage]);
 
     const handleSave = () => {
         if (!title.trim()) {
@@ -31,7 +33,7 @@ export function TripSettingsModal({ onClose }: TripSettingsModalProps) {
         }
 
         const dateObj = date ? new Date(date) : null;
-        setTripInfo(title, localMembers, dateObj);
+        setTripInfo(title, localMembers, dateObj, imageUrl);
         onClose();
     };
 
@@ -85,6 +87,22 @@ export function TripSettingsModal({ onClose }: TripSettingsModalProps) {
                             onChange={(e) => setDate(e.target.value)}
                             className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 font-medium focus:outline-none focus:ring-2 focus:ring-black/5"
                         />
+                    </div>
+
+                    {/* Cover Image Input */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                            <span className="text-base">🖼️</span>
+                            カバー画像 (URL)
+                        </label>
+                        <input
+                            type="text"
+                            value={imageUrl}
+                            onChange={(e) => setImageUrl(e.target.value)}
+                            className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-black/5"
+                            placeholder="https://example.com/image.jpg"
+                        />
+                        <p className="text-xs text-gray-400">※画像のURLを入力してください</p>
                     </div>
 
                     {/* Members (Editable Names) */}
