@@ -205,17 +205,30 @@ export function TripProvider({ children }: { children: ReactNode }) {
             if (!targetId) {
                 // Create new ID
                 targetId = generateTripId();
+
+                // 1. Create Trip Document FIRST
+                await setDoc(doc(db, "trips", targetId), {
+                    ...updates,
+                    id: targetId,
+                    schedule, // Save current state if any
+                    duration: tripDuration,
+                    checkList,
+                    checkListTabs
+                }, { merge: true });
+
+                // 2. Then Link User to Trip
                 await setDoc(doc(db, "users", user.uid), { activeTripId: targetId }, { merge: true });
                 // setActiveTripId will be updated by the user profile listener
+            } else {
+                await setDoc(doc(db, "trips", targetId), {
+                    ...updates,
+                    id: targetId,
+                    schedule, // Save current state if any
+                    duration: tripDuration,
+                    checkList,
+                    checkListTabs
+                }, { merge: true });
             }
-            await setDoc(doc(db, "trips", targetId), {
-                ...updates,
-                id: targetId,
-                schedule, // Save current state if any
-                duration: tripDuration,
-                checkList,
-                checkListTabs
-            }, { merge: true });
         } else {
             // For demo mode, save to the demo trip ID
             saveTripData(updates);
