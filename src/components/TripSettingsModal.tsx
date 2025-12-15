@@ -7,7 +7,7 @@ interface TripSettingsModalProps {
 }
 
 export function TripSettingsModal({ onClose }: TripSettingsModalProps) {
-    const { tripTitle, tripDate, tripImage, members, setTripInfo } = useTrip();
+    const { tripTitle, tripDate, tripImage, members, setTripInfo, tripId } = useTrip();
 
     // Local state for editing form
     const [title, setTitle] = useState(tripTitle);
@@ -129,19 +129,49 @@ export function TripSettingsModal({ onClose }: TripSettingsModalProps) {
                         <p className="text-xs text-gray-400">※人数の変更はアプリのリセットが必要です</p>
                     </div>
 
+                    {/* Share ID Display */}
+                    {tripId && (
+                        <div className="bg-primary-50 p-4 rounded-xl border border-primary-100">
+                            <h3 className="font-bold text-primary-800 text-sm mb-2 flex items-center gap-2">
+                                <Share className="w-4 h-4" /> 招待ID (パートナー入力用)
+                            </h3>
+                            <div className="flex gap-2">
+                                <code className="flex-1 bg-white px-3 py-2 rounded-lg font-mono text-center text-lg font-bold tracking-widest border border-primary-200 text-primary-900 select-all">
+                                    {tripId}
+                                </code>
+                                <button
+                                    onClick={() => {
+                                        navigator.clipboard.writeText(tripId);
+                                        alert('招待IDをコピーしました！');
+                                    }}
+                                    className="bg-white border border-primary-200 text-primary-700 px-3 rounded-lg font-bold text-sm hover:bg-primary-50"
+                                >
+                                    コピー
+                                </button>
+                            </div>
+                            <p className="text-xs text-primary-600/70 mt-2">
+                                パートナーのアプリで「招待に参加」を選び、このIDを入力してもらってください。
+                            </p>
+                        </div>
+                    )}
+
                 </div>
 
                 {/* Footer */}
                 <div className="p-4 border-t border-gray-100 bg-gray-50 space-y-3">
                     <button
                         onClick={() => {
-                            navigator.clipboard.writeText(window.location.origin);
-                            alert('URLをコピーしました！パートナーに送って共有しましょう。');
+                            if (tripId) {
+                                navigator.clipboard.writeText(tripId);
+                                alert('招待IDをコピーしました！パートナーに送って共有しましょう。');
+                            } else {
+                                alert('まだIDが生成されていません。一度保存してください。');
+                            }
                         }}
                         className="w-full bg-white border border-gray-300 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
                     >
                         <Share className="w-4 h-4" />
-                        パートナーを招待する（URLコピー）
+                        招待IDをコピー
                     </button>
 
                     <button

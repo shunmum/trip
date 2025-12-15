@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import { X, MapPin, ExternalLink, Timer, JapaneseYen, Pencil, Save } from 'lucide-react';
-import type { ScheduleItem } from '../types';
+import { X, MapPin, ExternalLink, Timer, JapaneseYen, Pencil, Save, Paperclip, FileText, Trash2, Loader2 } from 'lucide-react';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from '../lib/firebase';
+import type { ScheduleItem, Attachment } from '../types';
 
 interface ScheduleDetailsModalProps {
     item: ScheduleItem | null;
@@ -12,6 +14,7 @@ interface ScheduleDetailsModalProps {
 export function ScheduleDetailsModal({ item, onClose, onSave, initialIsEditing = false }: ScheduleDetailsModalProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [editedItem, setEditedItem] = useState<ScheduleItem | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
 
     useEffect(() => {
         setEditedItem(item);
@@ -29,6 +32,48 @@ export function ScheduleDetailsModal({ item, onClose, onSave, initialIsEditing =
 
     const handleChange = (field: keyof ScheduleItem, value: any) => {
         setEditedItem(prev => prev ? { ...prev, [field]: value } : null);
+    };
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files || e.target.files.length === 0) return;
+        const file = e.target.files[0];
+
+        setIsUploading(true);
+        try {
+            const storageRef = ref(storage, `attachments/${Date.now()}_${file.name}`);
+            await uploadBytes(storageRef, file);
+            const url = await getDownloadURL(storageRef);
+
+            const newAttachment: Attachment = {
+                id: Math.random().toString(),
+                name: file.name,
+                url,
+                type: file.type.includes('pdf') ? 'pdf' : 'image'
+            };
+
+            setEditedItem(prev => {
+                if (!prev) return null;
+                return {
+                    ...prev,
+                    attachments: [...(prev.attachments || []), newAttachment]
+                };
+            });
+        } catch (error) {
+            console.error("Error uploading file:", error);
+            alert("アップロードに失敗しました");
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    const removeAttachment = (id: string) => {
+        setEditedItem(prev => {
+            if (!prev) return null;
+            return {
+                ...prev,
+                attachments: (prev.attachments || []).filter(a => a.id !== id)
+            };
+        });
     };
 
     return (
@@ -193,6 +238,69 @@ export function ScheduleDetailsModal({ item, onClose, onSave, initialIsEditing =
                                 )}
                             </div>
                         )}
+
+                        {/* Attachments (PDF/Images) */}
+                        <div className="w-full">
+                            <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                                <Paperclip className="w-4 h-4" /> 添付ファイル
+                            </h3>
+
+                            <div className="space-y-2 mb-3">
+                                {editedItem.attachments?.map(att => (
+                                    <div key={att.id} className="flex items-center justify-between p-2 bg-gray-50 border border-gray-200 rounded-lg group">
+                                        <a
+                                            href={att.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-2 text-sm text-blue-600 hover:underline truncate flex-1"
+                                        >
+                                            <FileText className="w-4 h-4 shrink-0" />
+                                            <span className="truncate">{att.name}</span>
+                                        </a>
+                                        {isEditing && (
+                                            <button
+                                                onClick={() => removeAttachment(att.id)}
+                                                className="p-1 text-gray-400 hover:text-red-500 rounded-full hover:bg-gray-100 transition-colors"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        )}
+                                    </div>
+                                ))}
+                                {(!editedItem.attachments || editedItem.attachments.length === 0) && !isEditing && (
+                                    <p className="text-sm text-gray-400 italic">添付なし</p>
+                                )}
+                            </div>
+
+                            {isEditing && (
+                                <div className="relative">
+                                    <input
+                                        type="file"
+                                        accept=".pdf,image/*"
+                                        onChange={handleFileUpload}
+                                        className="hidden"
+                                        id="file-upload"
+                                        disabled={isUploading}
+                                    />
+                                    <label
+                                        htmlFor="file-upload"
+                                        className={`flex items-center justify-center gap-2 w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 text-sm font-medium hover:border-gray-400 hover:bg-gray-50 cursor-pointer transition-colors ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    >
+                                        {isUploading ? (
+                                            <>
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                                アップロード中...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Paperclip className="w-4 h-4" />
+                                                ファイルを追加 (PDF/画像)
+                                            </>
+                                        )}
+                                    </label>
+                                </div>
+                            )}
+                        </div>
 
                         {/* Action Buttons (Edit Mode) */}
                         {isEditing && (

@@ -5,9 +5,11 @@ import { Users, Palmtree, ArrowRight, Check } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 export function OnboardingPage() {
-    const { setTripInfo } = useTrip();
+    const { setTripInfo, joinTrip } = useTrip();
     const { user, signInWithGoogle } = useAuth();
-    const [step, setStep] = useState(1); // 1: Count, 2: Names, 3: Title
+    const [step, setStep] = useState(0); // 0: Select Type, 1: Count, 2: Names, 3: Title
+    const [joinId, setJoinId] = useState('');
+    const [isJoining, setIsJoining] = useState(false);
     const [memberCount, setMemberCount] = useState(2);
     const [memberNames, setMemberNames] = useState<string[]>(['', '']);
     const [tripDate, setTripDate] = useState<string>(''); // Store as YYYY-MM-DD string locally
@@ -77,6 +79,67 @@ export function OnboardingPage() {
                             <p className="text-xs text-center text-gray-400 leading-relaxed">
                                 ※LINEなどのアプリ内ブラウザではログインできない場合があります。<br />
                                 その場合は<span className="font-bold text-gray-500">SafariやChrome</span>で開いてください。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Step 0: Choose Create or Join
+    if (step === 0) {
+        return (
+            <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-500">
+                <div className="max-w-md w-full space-y-8">
+                    <h1 className="text-3xl font-bold text-gray-900">旅行をはじめましょう</h1>
+
+                    <div className="space-y-4">
+                        <button
+                            onClick={() => setStep(1)}
+                            className="w-full bg-black text-white p-6 rounded-2xl flex items-center justify-between group hover:bg-gray-800 transition-all font-bold text-lg"
+                        >
+                            <span>🆕 新しい旅行を作る</span>
+                            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                        </button>
+
+                        <div className="relative border-t border-gray-100 my-8">
+                            <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-2 text-gray-400 text-sm">OR</span>
+                        </div>
+
+                        <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
+                            <h2 className="text-gray-900 font-bold mb-4 flex items-center justify-center gap-2">
+                                <Users className="w-5 h-5" /> 招待に参加する
+                            </h2>
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    placeholder="招待 ID (例: AB12CD)"
+                                    className="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-3 font-mono text-center uppercase tracking-widest focus:ring-2 focus:ring-black outline-none"
+                                    value={joinId}
+                                    onChange={(e) => setJoinId(e.target.value.toUpperCase())}
+                                />
+                                <button
+                                    onClick={async () => {
+                                        if (!joinId) return;
+                                        setIsJoining(true);
+                                        try {
+                                            await joinTrip(joinId);
+                                            // Navigation happens automatically via TripProvider state change or just reload/redirect
+                                        } catch (e) {
+                                            alert("旅行が見つかりませんでした。IDを確認してください。");
+                                        } finally {
+                                            setIsJoining(false);
+                                        }
+                                    }}
+                                    disabled={!joinId || isJoining}
+                                    className="bg-primary-600 text-white font-bold px-6 rounded-xl hover:bg-primary-700 disabled:opacity-50 transition-colors"
+                                >
+                                    {isJoining ? "..." : "参加"}
+                                </button>
+                            </div>
+                            <p className="text-xs text-gray-400 mt-2 text-left">
+                                ※招待IDは、旅行作成者の「設定」メニューから確認できます。
                             </p>
                         </div>
                     </div>

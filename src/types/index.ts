@@ -1,5 +1,12 @@
 export type User = string;
 
+export interface Attachment {
+  id: string;
+  name: string;
+  url: string;
+  type: string; // 'pdf' | 'image' | etc.
+}
+
 export interface ScrapItem {
   id: string;
   title: string;
@@ -41,6 +48,7 @@ export interface ScheduleItem {
   address?: string;
   image?: string;
   budget?: number;
+  attachments?: Attachment[];
 }
 
 export interface Location {
