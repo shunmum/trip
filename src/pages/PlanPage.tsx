@@ -168,6 +168,7 @@ export function PlanPage() {
       </div>
 
       <ScheduleDetailsModal
+        key={selectedScheduleItem?.id || 'empty'}
         item={selectedScheduleItem}
         onClose={() => {
           setSelectedScheduleItem(null);

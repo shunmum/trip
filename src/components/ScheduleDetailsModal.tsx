@@ -99,7 +99,7 @@ export function ScheduleDetailsModal({ item, onClose, onSave, initialIsEditing =
     };
 
     // Construct unique ID for file input
-    const inputId = `file-upload-${item.id}`;
+    // Removed to prevent crash, handling reset via parent key
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
@@ -304,11 +304,11 @@ export function ScheduleDetailsModal({ item, onClose, onSave, initialIsEditing =
                                         accept=".pdf,image/*"
                                         onChange={handleFileUpload}
                                         className="hidden"
-                                        id={inputId}
+                                        id="file-upload"
                                         disabled={isUploading}
                                     />
                                     <label
-                                        htmlFor={inputId}
+                                        htmlFor="file-upload"
                                         className={`flex items-center justify-center gap-2 w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 text-sm font-medium hover:border-gray-400 hover:bg-gray-50 cursor-pointer transition-colors ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         {isUploading ? (
