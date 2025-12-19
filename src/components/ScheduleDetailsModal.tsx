@@ -15,6 +15,7 @@ export function ScheduleDetailsModal({ item, onClose, onSave, initialIsEditing =
     const [isEditing, setIsEditing] = useState(false);
     const [editedItem, setEditedItem] = useState<ScheduleItem | null>(null);
     const [isUploading, setIsUploading] = useState(false);
+    const [uploadError, setUploadError] = useState<string | null>(null);
 
     useEffect(() => {
         setEditedItem(item);
@@ -35,8 +36,6 @@ export function ScheduleDetailsModal({ item, onClose, onSave, initialIsEditing =
     const handleChange = (field: keyof ScheduleItem, value: any) => {
         setEditedItem(prev => prev ? { ...prev, [field]: value } : null);
     };
-
-    const [uploadError, setUploadError] = useState<string | null>(null);
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files || e.target.files.length === 0) return;
