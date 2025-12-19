@@ -19,6 +19,8 @@ export function ScheduleDetailsModal({ item, onClose, onSave, initialIsEditing =
     useEffect(() => {
         setEditedItem(item);
         setIsEditing(initialIsEditing);
+        setIsUploading(false);
+        setUploadError(null);
     }, [item, initialIsEditing]);
 
     if (!item || !editedItem) return null;
@@ -50,19 +52,16 @@ export function ScheduleDetailsModal({ item, onClose, onSave, initialIsEditing =
         setUploadError(null);
 
         try {
-            console.log("Starting upload for:", file.name);
             const storageRef = ref(storage, `attachments/${Date.now()}_${file.name}`);
 
             // Add a timeout promise race (60s)
             const uploadPromise = uploadBytes(storageRef, file);
             const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Upload timed out (60s)')), 60000)
+                setTimeout(() => reject(new Error('Upload timed out')), 60000)
             );
 
             await Promise.race([uploadPromise, timeoutPromise]);
-            console.log("Upload successful, getting URL...");
             const url = await getDownloadURL(storageRef);
-            console.log("Got URL:", url);
 
             const newAttachment: Attachment = {
                 id: Math.random().toString(),
@@ -98,6 +97,9 @@ export function ScheduleDetailsModal({ item, onClose, onSave, initialIsEditing =
             };
         });
     };
+
+    // Construct unique ID for file input
+    const inputId = `file-upload-${item.id}`;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
@@ -302,11 +304,11 @@ export function ScheduleDetailsModal({ item, onClose, onSave, initialIsEditing =
                                         accept=".pdf,image/*"
                                         onChange={handleFileUpload}
                                         className="hidden"
-                                        id="file-upload"
+                                        id={inputId}
                                         disabled={isUploading}
                                     />
                                     <label
-                                        htmlFor="file-upload"
+                                        htmlFor={inputId}
                                         className={`flex items-center justify-center gap-2 w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 text-sm font-medium hover:border-gray-400 hover:bg-gray-50 cursor-pointer transition-colors ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         {isUploading ? (
