@@ -20,8 +20,8 @@ export function Timeline({ items, onItemClick }: TimelineProps) {
           {/* Dot on the line */}
           <div className="absolute -left-[29px] mt-1.5 w-6 h-6 rounded-full border-4 border-white bg-gray-300 flex items-center justify-center z-10 shadow-sm" />
 
-          {/* Time */}
-          <div className="absolute -left-28 mt-1 w-20 text-right text-sm font-mono text-gray-500">
+          {/* Time - Desktop */}
+          <div className="absolute -left-28 mt-1 w-20 text-right text-sm font-mono text-gray-500 hidden md:block">
             {item.time}
           </div>
 
@@ -30,12 +30,17 @@ export function Timeline({ items, onItemClick }: TimelineProps) {
             onClick={() => onItemClick?.(item)}
             className="group relative bg-white border border-gray-100 rounded-lg p-4 shadow-sm hover:shadow-md hover:border-gray-200 transition-all duration-200 cursor-pointer"
           >
-            {/* Title */}
-            <div className="flex items-center gap-2 mb-1">
-              <Clock className="w-4 h-4 text-gray-400" />
-              <h3 className="text-base font-semibold text-gray-800 group-hover:text-black">
-                {item.title}
-              </h3>
+            {/* Title & Time - Mobile */}
+            <div className="flex flex-col gap-1 mb-1">
+              <div className="md:hidden text-xs font-mono text-gray-500 mb-1">
+                {item.time}
+              </div>
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-gray-400" />
+                <h3 className="text-base font-semibold text-gray-800 group-hover:text-black">
+                  {item.title}
+                </h3>
+              </div>
             </div>
 
             {/* Description */}

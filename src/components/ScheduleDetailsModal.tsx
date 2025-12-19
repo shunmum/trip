@@ -38,10 +38,23 @@ export function ScheduleDetailsModal({ item, onClose, onSave, initialIsEditing =
         if (!e.target.files || e.target.files.length === 0) return;
         const file = e.target.files[0];
 
+        // 5MB limit
+        if (file.size > 5 * 1024 * 1024) {
+            alert("ファイルサイズは5MB以下にしてください");
+            return;
+        }
+
         setIsUploading(true);
         try {
             const storageRef = ref(storage, `attachments/${Date.now()}_${file.name}`);
-            await uploadBytes(storageRef, file);
+
+            // Add a timeout promise race
+            const uploadPromise = uploadBytes(storageRef, file);
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Upload timed out')), 30000)
+            );
+
+            await Promise.race([uploadPromise, timeoutPromise]);
             const url = await getDownloadURL(storageRef);
 
             const newAttachment: Attachment = {
@@ -60,7 +73,7 @@ export function ScheduleDetailsModal({ item, onClose, onSave, initialIsEditing =
             });
         } catch (error) {
             console.error("Error uploading file:", error);
-            alert("アップロードに失敗しました");
+            alert("アップロードに失敗しました (タイムアウトまたはエラー)");
         } finally {
             setIsUploading(false);
         }
