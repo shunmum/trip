@@ -34,28 +34,35 @@ export function ScheduleDetailsModal({ item, onClose, onSave, initialIsEditing =
         setEditedItem(prev => prev ? { ...prev, [field]: value } : null);
     };
 
+    const [uploadError, setUploadError] = useState<string | null>(null);
+
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files || e.target.files.length === 0) return;
         const file = e.target.files[0];
 
         // 5MB limit
         if (file.size > 5 * 1024 * 1024) {
-            alert("ファイルサイズは5MB以下にしてください");
+            setUploadError("ファイルサイズは5MB以下にしてください");
             return;
         }
 
         setIsUploading(true);
+        setUploadError(null);
+
         try {
+            console.log("Starting upload for:", file.name);
             const storageRef = ref(storage, `attachments/${Date.now()}_${file.name}`);
 
-            // Add a timeout promise race
+            // Add a timeout promise race (60s)
             const uploadPromise = uploadBytes(storageRef, file);
             const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Upload timed out')), 30000)
+                setTimeout(() => reject(new Error('Upload timed out (60s)')), 60000)
             );
 
             await Promise.race([uploadPromise, timeoutPromise]);
+            console.log("Upload successful, getting URL...");
             const url = await getDownloadURL(storageRef);
+            console.log("Got URL:", url);
 
             const newAttachment: Attachment = {
                 id: Math.random().toString(),
@@ -71,11 +78,14 @@ export function ScheduleDetailsModal({ item, onClose, onSave, initialIsEditing =
                     attachments: [...(prev.attachments || []), newAttachment]
                 };
             });
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error uploading file:", error);
-            alert("アップロードに失敗しました (タイムアウトまたはエラー)");
+            const errorMessage = error.code ? `Error: ${error.code}` : error.message || "Unknown error";
+            setUploadError(`アップロード失敗: ${errorMessage}`);
         } finally {
             setIsUploading(false);
+            // Reset input value to allow selecting same file again if needed
+            e.target.value = '';
         }
     };
 
@@ -311,6 +321,11 @@ export function ScheduleDetailsModal({ item, onClose, onSave, initialIsEditing =
                                             </>
                                         )}
                                     </label>
+                                    {uploadError && (
+                                        <div className="mt-2 text-red-500 text-sm bg-red-50 p-2 rounded border border-red-200">
+                                            {uploadError}
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
