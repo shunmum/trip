@@ -71,6 +71,12 @@ export function PlanPage() {
     setIsNewItem(true);
   };
 
+  const handleDeleteScheduleItem = (id: string) => {
+    const newSchedule = schedule.filter(item => item.id !== id);
+    setSchedule(newSchedule);
+    setSelectedScheduleItem(null);
+  };
+
   return (
     <div className="h-full bg-white overflow-y-auto">
       {/* Cover Image */}
@@ -175,6 +181,7 @@ export function PlanPage() {
           setIsNewItem(false);
         }}
         onSave={handleSaveScheduleItem}
+        onDelete={handleDeleteScheduleItem}
         initialIsEditing={isNewItem}
       />
     </div>

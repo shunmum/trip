@@ -8,10 +8,11 @@ interface ScheduleDetailsModalProps {
     item: ScheduleItem | null;
     onClose: () => void;
     onSave: (updatedItem: ScheduleItem) => void;
+    onDelete?: (id: string) => void;
     initialIsEditing?: boolean;
 }
 
-export function ScheduleDetailsModal({ item, onClose, onSave, initialIsEditing = false }: ScheduleDetailsModalProps) {
+export function ScheduleDetailsModal({ item, onClose, onSave, onDelete, initialIsEditing = false }: ScheduleDetailsModalProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [editedItem, setEditedItem] = useState<ScheduleItem | null>(null);
     const [isUploading, setIsUploading] = useState(false);
@@ -30,6 +31,15 @@ export function ScheduleDetailsModal({ item, onClose, onSave, initialIsEditing =
         if (editedItem) {
             onSave(editedItem);
             setIsEditing(false);
+        }
+    };
+
+    const handleDelete = () => {
+        if (onDelete && item) {
+            if (window.confirm('この予定を削除してもよろしいですか？')) {
+                onDelete(item.id);
+                onClose();
+            }
         }
     };
 
@@ -142,14 +152,27 @@ export function ScheduleDetailsModal({ item, onClose, onSave, initialIsEditing =
                         <div className="flex items-center gap-2 text-primary-600 mb-2 font-medium">
                             <Timer className="w-4 h-4" />
                             {isEditing ? (
-                                <input
-                                    type="time"
-                                    value={editedItem.time}
-                                    onChange={(e) => handleChange('time', e.target.value)}
-                                    className="bg-gray-50 border border-gray-200 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
-                                />
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="time"
+                                        value={editedItem.time}
+                                        onChange={(e) => handleChange('time', e.target.value)}
+                                        className="bg-gray-50 border border-gray-200 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                                    />
+                                    <span className="text-gray-400">-</span>
+                                    <input
+                                        type="time"
+                                        value={editedItem.endTime || ''}
+                                        onChange={(e) => handleChange('endTime', e.target.value)}
+                                        className="bg-gray-50 border border-gray-200 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                                        placeholder="終了"
+                                    />
+                                </div>
                             ) : (
-                                <span>{item.time}</span>
+                                <span>
+                                    {item.time}
+                                    {item.endTime && <span className="text-gray-400 mx-1">- {item.endTime}</span>}
+                                </span>
                             )}
                         </div>
                         {isEditing ? (
@@ -334,6 +357,15 @@ export function ScheduleDetailsModal({ item, onClose, onSave, initialIsEditing =
                         {/* Action Buttons (Edit Mode) */}
                         {isEditing && (
                             <div className="flex gap-3 pt-4 border-t border-gray-100 mt-4">
+                                {onDelete && (
+                                    <button
+                                        onClick={handleDelete}
+                                        className="py-2 px-3 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                        title="削除"
+                                    >
+                                        <Trash2 className="w-5 h-5" />
+                                    </button>
+                                )}
                                 <button
                                     onClick={() => setIsEditing(false)} // Reset to original item on cancel (effect handles updates if needed, but simple toggle is enough for now)
                                     className="flex-1 py-2 text-gray-600 font-bold hover:bg-gray-100 rounded-lg transition-colors"

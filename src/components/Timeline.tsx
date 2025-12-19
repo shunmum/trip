@@ -23,6 +23,7 @@ export function Timeline({ items, onItemClick }: TimelineProps) {
           {/* Time - Desktop */}
           <div className="absolute -left-28 mt-1 w-20 text-right text-sm font-mono text-gray-500 hidden md:block">
             {item.time}
+            {item.endTime && <div className="text-xs text-gray-400">~{item.endTime}</div>}
           </div>
 
           {/* Card Content (Notion-like block) */}
@@ -33,7 +34,7 @@ export function Timeline({ items, onItemClick }: TimelineProps) {
             {/* Title & Time - Mobile */}
             <div className="flex flex-col gap-1 mb-1">
               <div className="md:hidden text-xs font-mono text-gray-500 mb-1">
-                {item.time}
+                {item.time} {item.endTime && `- ${item.endTime}`}
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-gray-400" />

@@ -40,6 +40,7 @@ export interface PackingItem {
 export interface ScheduleItem {
   id: string;
   time: string;
+  endTime?: string;
   title: string;
   description: string;
   day: number;
