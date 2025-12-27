@@ -80,4 +80,5 @@ export interface Expense {
   receiptUrl?: string; // Optional URL for the receipt image
   date: Date;
   shopName?: string;
+  settled?: boolean;
 }

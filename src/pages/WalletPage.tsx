@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ReceiptScanner } from '../components/ReceiptScanner';
 import { ExpenseModal } from '../components/ExpenseModal';
 import { UserAvatar } from '../components/UserAvatar';
-import { Receipt, ArrowRight, Banknote, Calendar, Plus } from 'lucide-react';
+import { Receipt, ArrowRight, Banknote, Calendar, Plus, Check } from 'lucide-react';
 import { useTrip } from '../context/TripContext';
 import type { Expense } from '../types';
 
@@ -10,18 +10,18 @@ export function WalletPage() {
     const { members, expenses, setExpenses } = useTrip();
     const [isManualModalOpen, setIsManualModalOpen] = useState(false);
 
-    // Calculate Totals per Member
+    // Calculate Totals per Member (only unsettled)
+    const unsettledExpenses = expenses.filter(e => !e.settled);
+
     const totals = members.reduce((acc, member) => {
-        acc[member] = expenses.filter(e => e.paidBy === member).reduce((sum, curr) => sum + curr.amount, 0);
+        acc[member] = unsettledExpenses
+            .filter(e => e.paidBy === member)
+            .reduce((sum, curr) => sum + curr.amount, 0);
         return acc;
     }, {} as Record<string, number>);
 
     const totalAmount = Object.values(totals).reduce((a, b) => a + b, 0);
-    const splitAmount = totalAmount / members.length;
-
-    // Simplified Settlement: Who owes who? (Assumes 2 people for simple UI display, or generalizes)
-    // For generalized N-person settlement, logic is complex. Sticking to simple comparison for now if 2 members.
-    // If > 2, just showing individual balances vs average.
+    const splitAmount = totals && members.length > 0 ? totalAmount / members.length : 0;
 
     // Calculate Balance (Paid - Should Pay)
     const balances = members.map(member => ({
@@ -29,6 +29,16 @@ export function WalletPage() {
         paid: totals[member] || 0,
         balance: (totals[member] || 0) - splitAmount
     })).sort((a, b) => a.balance - b.balance); // Ascending: Negative (Debtor) -> Positive (Creditor)
+
+    const handleSettleUp = () => {
+        if (!window.confirm('現在の精算を完了し、残高を0にします。履歴は履歴として残ります。よろしいですか？')) return;
+
+        const updatedExpenses = expenses.map(e => ({
+            ...e,
+            settled: true
+        }));
+        setExpenses(updatedExpenses);
+    };
 
     const handleScanComplete = (result: { amount: number; shopName: string; items: string[] }) => {
         // Create new expense from scan result
@@ -88,9 +98,18 @@ export function WalletPage() {
                     <div className="relative z-10">
                         <div className="flex justify-between items-start mb-6">
                             <div>
-                                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">TOTAL EXPENSES</p>
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">UNSETTLED TOTAL</p>
                                 <p className="text-4xl font-black text-gray-900">¥{totalAmount.toLocaleString()}</p>
                             </div>
+                            {totalAmount > 0 && (
+                                <button
+                                    onClick={handleSettleUp}
+                                    className="flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-gray-800 transition-colors shadow-lg shadow-gray-200"
+                                >
+                                    <Check className="w-4 h-4" />
+                                    精算を完了
+                                </button>
+                            )}
                         </div>
 
                         {/* Settlement Info (Simplified for 2-person case which is the main use case) */}
@@ -98,15 +117,16 @@ export function WalletPage() {
                             (() => {
                                 const m1 = balances[0]; // Debtor (paid less)
                                 const m2 = balances[1]; // Creditor (paid more)
-                                const settlementAmount = m2.paid - splitAmount; // or abs(m1.balance)
 
                                 if (Math.abs(m1.balance) < 1) {
                                     return (
                                         <div className="bg-green-50 text-green-700 p-4 rounded-xl text-center font-bold text-sm">
-                                            割り勘は完了しています！
+                                            現在の割り勘は完了しています！
                                         </div>
                                     );
                                 }
+
+                                const settlementAmount = Math.abs(m1.balance);
 
                                 return (
                                     <div className="bg-gray-50 rounded-xl p-4 flex items-center justify-between border border-gray-100">
@@ -147,32 +167,43 @@ export function WalletPage() {
                 {/* Expense List */}
                 <div className="space-y-4">
                     <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest ml-1">Transactions</h3>
-                    {expenses.map((expense) => (
-                        <div key={expense.id} className="bg-white rounded-xl p-4 border border-gray-100 flex items-center justify-between hover:shadow-md transition-shadow">
-                            <div className="flex items-center gap-4">
-                                <div className={`p-3 rounded-full ${expense.category === '食費' ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-600'}`}>
-                                    <Receipt className="w-5 h-5" />
+                    {expenses.length === 0 ? (
+                        <div className="text-center py-10 bg-white rounded-2xl border-2 border-dashed border-gray-200">
+                            <p className="text-gray-400 font-medium">まだ支出がありません</p>
+                        </div>
+                    ) : (
+                        expenses.map((expense) => (
+                            <div key={expense.id} className={`bg-white rounded-xl p-4 border border-gray-100 flex items-center justify-between hover:shadow-md transition-shadow ${expense.settled ? 'opacity-60 bg-gray-50/50' : ''}`}>
+                                <div className="flex items-center gap-4">
+                                    <div className={`p-3 rounded-full ${expense.category === '食費' ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-600'}`}>
+                                        <Receipt className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <div className="flex items-center gap-2">
+                                            <h4 className="font-bold text-gray-900">{expense.shopName}</h4>
+                                            {expense.settled && (
+                                                <span className="bg-gray-200 text-gray-600 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter">Settled</span>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
+                                            <Calendar className="w-3 h-3" />
+                                            <span>{expense.date.toLocaleDateString('ja-JP')}</span>
+                                            <span className="text-gray-300">|</span>
+                                            <span>{expense.category}</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h4 className="font-bold text-gray-900">{expense.shopName}</h4>
-                                    <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
-                                        <Calendar className="w-3 h-3" />
-                                        <span>{expense.date.toLocaleDateString('ja-JP')}</span>
-                                        <span className="text-gray-300">|</span>
-                                        <span>{expense.category}</span>
+
+                                <div className="text-right">
+                                    <p className="font-bold text-lg text-gray-900">¥{expense.amount.toLocaleString()}</p>
+                                    <div className="flex items-center justify-end gap-1 mt-1">
+                                        <span className="text-[10px] text-gray-400">Paid by</span>
+                                        <UserAvatar user={expense.paidBy} size="sm" />
                                     </div>
                                 </div>
                             </div>
-
-                            <div className="text-right">
-                                <p className="font-bold text-lg text-gray-900">¥{expense.amount.toLocaleString()}</p>
-                                <div className="flex items-center justify-end gap-1 mt-1">
-                                    <span className="text-[10px] text-gray-400">Paid by</span>
-                                    <UserAvatar user={expense.paidBy} size="sm" />
-                                </div>
-                            </div>
-                        </div>
-                    ))}
+                        ))
+                    )}
                 </div>
 
                 <ExpenseModal
