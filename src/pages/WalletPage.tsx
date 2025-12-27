@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { mockExpenses } from '../data/mockData';
 import { ReceiptScanner } from '../components/ReceiptScanner';
 import { ExpenseModal } from '../components/ExpenseModal';
 import { UserAvatar } from '../components/UserAvatar';
@@ -8,8 +7,7 @@ import { useTrip } from '../context/TripContext';
 import type { Expense } from '../types';
 
 export function WalletPage() {
-    const { members } = useTrip();
-    const [expenses, setExpenses] = useState<Expense[]>(mockExpenses);
+    const { members, expenses, setExpenses } = useTrip();
     const [isManualModalOpen, setIsManualModalOpen] = useState(false);
 
     // Calculate Totals per Member

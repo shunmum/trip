@@ -1,23 +1,25 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { doc, onSnapshot, setDoc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import type { ScheduleItem, PackingItem } from '../types';
+import type { ScheduleItem, PackingItem, Expense } from '../types';
 import { useAuth } from './AuthContext';
 
 interface TripContextType {
     isSetup: boolean;
     tripTitle: string;
     tripDate: Date | null;
-    tripImage: string | null; // New
+    tripImage: string | null;
     members: string[]; // List of names
     schedule: ScheduleItem[];
     checkList: PackingItem[];
     checkListTabs: string[];
+    expenses: Expense[];
     tripDuration: number;
-    setTripInfo: (title: string, members: string[], date: Date | null, image?: string | null) => void; // Updated
+    setTripInfo: (title: string, members: string[], date: Date | null, image?: string | null) => void;
     setSchedule: (items: ScheduleItem[]) => void;
     setCheckList: (items: PackingItem[]) => void;
     setCheckListTabs: (tabs: string[]) => void;
+    setExpenses: (items: Expense[]) => void;
     setTripDuration: (days: number) => void;
     joinTrip: (tripId: string) => Promise<void>;
     resetTrip: () => void;
@@ -34,11 +36,12 @@ export function TripProvider({ children }: { children: ReactNode }) {
     const [isSetup, setIsSetup] = useState(false);
     const [tripTitle, setTripTitle] = useState('');
     const [tripDate, setTripDate] = useState<Date | null>(null);
-    const [tripImage, setTripImage] = useState<string | null>(null); // New
+    const [tripImage, setTripImage] = useState<string | null>(null);
     const [members, setMembers] = useState<string[]>([]);
     const [schedule, setScheduleState] = useState<ScheduleItem[]>([]);
     const [checkList, setCheckListState] = useState<PackingItem[]>([]);
     const [checkListTabs, setCheckListTabsState] = useState<string[]>([]);
+    const [expenses, setExpensesState] = useState<Expense[]>([]);
     const [tripDuration, setTripDurationState] = useState(2); // Default to 2 days
 
     // The current active trip ID
@@ -67,6 +70,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
                 setScheduleState([]);
                 setCheckListState([]);
                 setCheckListTabsState([]);
+                setExpensesState([]);
                 setTripDurationState(2);
             }
         }, (error) => {
@@ -87,6 +91,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
             setScheduleState([]);
             setCheckListState([]);
             setCheckListTabsState([]);
+            setExpensesState([]);
             setTripDurationState(2);
             return;
         }
@@ -100,15 +105,22 @@ export function TripProvider({ children }: { children: ReactNode }) {
                 if (data.date) {
                     setTripDate(new Date(data.date));
                 }
-                setTripImage(data.image || null); // New
+                setTripImage(data.image || null);
                 setScheduleState(data.schedule || []);
                 setTripDurationState(data.duration || 2);
                 setCheckListState(data.checkList || []);
                 setCheckListTabsState(data.checkListTabs || []);
+
+                // Handle expense dates correctly (convert string/timestamp to Date)
+                const loadedExpenses = (data.expenses || []).map((e: any) => ({
+                    ...e,
+                    date: e.date && typeof e.date.toDate === 'function' ? e.date.toDate() : new Date(e.date || Date.now())
+                }));
+                setExpensesState(loadedExpenses);
+
                 setIsSetup(true);
             } else {
                 // Trip document does not exist for the activeTripId
-                // This might happen if a trip was deleted or ID is invalid
                 setIsSetup(false);
                 setTripTitle('');
                 setMembers([]);
@@ -117,9 +129,8 @@ export function TripProvider({ children }: { children: ReactNode }) {
                 setScheduleState([]);
                 setCheckListState([]);
                 setCheckListTabsState([]);
+                setExpensesState([]);
                 setTripDurationState(2);
-                // If user is logged in and their activeTripId points to a non-existent trip,
-                // consider clearing their activeTripId in their user document.
                 if (user && activeTripId !== DEMO_TRIP_ID) {
                     setDoc(doc(db, "users", user.uid), { activeTripId: null }, { merge: true })
                         .catch(e => console.error("Error clearing invalid activeTripId:", e));
@@ -127,11 +138,11 @@ export function TripProvider({ children }: { children: ReactNode }) {
             }
         }, (error) => {
             console.error("Error fetching trip:", error);
-            setIsSetup(false); // Ensure setup mode if there's an error
+            setIsSetup(false);
         });
 
         return () => unsubscribe();
-    }, [activeTripId, user]); // Depend on activeTripId and user (for clearing invalid ID)
+    }, [activeTripId, user]);
 
     const saveTripData = async (updates: Partial<any>) => {
         if (!activeTripId) {
@@ -150,7 +161,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
             duration: tripDuration,
             checkList,
             checkListTabs,
-            // Add ID to allow joining
+            expenses,
             id: targetId,
             ...updates
         };
@@ -177,7 +188,6 @@ export function TripProvider({ children }: { children: ReactNode }) {
 
             // Set user's active trip
             await setDoc(doc(db, "users", user.uid), { activeTripId: tripId }, { merge: true });
-            // setActiveTripId will be updated by the user profile listener
         } catch (error) {
             console.error("Error joining trip:", error);
             throw error;
@@ -199,49 +209,42 @@ export function TripProvider({ children }: { children: ReactNode }) {
         };
 
         if (user) {
-            // If creating a NEW trip (no active ID yet), allow generating one. 
-            // Or if updating existing.
             let targetId = activeTripId;
             if (!targetId) {
-                // Create new ID
                 targetId = generateTripId();
 
-                // 1. Create Trip Document FIRST
                 await setDoc(doc(db, "trips", targetId), {
                     ...updates,
                     id: targetId,
-                    schedule, // Save current state if any
+                    schedule,
                     duration: tripDuration,
                     checkList,
-                    checkListTabs
+                    checkListTabs,
+                    expenses
                 }, { merge: true });
 
-                // 2. Then Link User to Trip
                 await setDoc(doc(db, "users", user.uid), { activeTripId: targetId }, { merge: true });
-                // setActiveTripId will be updated by the user profile listener
             } else {
                 await setDoc(doc(db, "trips", targetId), {
                     ...updates,
                     id: targetId,
-                    schedule, // Save current state if any
+                    schedule,
                     duration: tripDuration,
                     checkList,
-                    checkListTabs
+                    checkListTabs,
+                    expenses
                 }, { merge: true });
             }
         } else {
-            // For demo mode, save to the demo trip ID
             saveTripData(updates);
         }
     };
 
-    // Helper to generate simple 6-char ID
     const generateTripId = () => {
         return Math.random().toString(36).substring(2, 8).toUpperCase();
     };
 
     const setSchedule = (items: ScheduleItem[]) => {
-        // Optimistic update
         setScheduleState(items);
         saveTripData({ schedule: items });
     };
@@ -256,6 +259,11 @@ export function TripProvider({ children }: { children: ReactNode }) {
         saveTripData({ checkListTabs: tabs });
     };
 
+    const setExpenses = (items: Expense[]) => {
+        setExpensesState(items);
+        saveTripData({ expenses: items });
+    };
+
     const setTripDuration = (days: number) => {
         setTripDurationState(days);
         saveTripData({ duration: days });
@@ -266,21 +274,19 @@ export function TripProvider({ children }: { children: ReactNode }) {
         setTripTitle('');
         setMembers([]);
         setTripDate(null);
-        setTripImage(null); // New
+        setTripImage(null);
         setScheduleState([]);
         setCheckListState([]);
         setCheckListTabsState([]);
+        setExpensesState([]);
         setTripDurationState(2);
 
         if (user) {
-            // Remove active trip from user
             await setDoc(doc(db, "users", user.uid), { activeTripId: null }, { merge: true });
-            // setActiveTripId will be updated by the user profile listener
         } else {
-            // For demo mode, clear the demo trip data
             try {
                 await setDoc(doc(db, "trips", DEMO_TRIP_ID), {
-                    title: '', members: [], date: null, image: null, schedule: [], duration: 2, checkList: [], checkListTabs: []
+                    title: '', members: [], date: null, image: null, schedule: [], duration: 2, checkList: [], checkListTabs: [], expenses: []
                 });
             } catch (e) {
                 console.error("Error resetting demo trip", e);
@@ -290,8 +296,8 @@ export function TripProvider({ children }: { children: ReactNode }) {
 
     return (
         <TripContext.Provider value={{
-            isSetup, tripTitle, tripDate, tripImage, members, schedule, checkList, checkListTabs, tripDuration,
-            setTripInfo, setSchedule, setCheckList, setCheckListTabs, setTripDuration, resetTrip, joinTrip, tripId: activeTripId
+            isSetup, tripTitle, tripDate, tripImage, members, schedule, checkList, checkListTabs, expenses, tripDuration,
+            setTripInfo, setSchedule, setCheckList, setCheckListTabs, setExpenses, setTripDuration, resetTrip, joinTrip, tripId: activeTripId
         }}>
             {children}
         </TripContext.Provider>
